@@ -1,10 +1,12 @@
 /**
  * BookMyStayApp - Hotel Booking Application
- * UC2: Object modeling through inheritance and abstraction.
+ * UC3: Centralized inventory management using HashMap.
  *
  * @author blazevineet
  * @version 1.0
  */
+
+import java.util.HashMap;
 
 abstract class Room {
     String roomType;
@@ -45,6 +47,32 @@ class SuiteRoom extends Room {
     }
 }
 
+class RoomInventory {
+    private HashMap<String, Integer> inventory;
+
+    RoomInventory() {
+        inventory = new HashMap<>();
+        inventory.put("Single Room", 5);
+        inventory.put("Double Room", 3);
+        inventory.put("Suite Room", 2);
+    }
+
+    int getAvailability(String roomType) {
+        return inventory.getOrDefault(roomType, 0);
+    }
+
+    void updateAvailability(String roomType, int count) {
+        inventory.put(roomType, count);
+    }
+
+    void displayInventory() {
+        System.out.println("===== Room Inventory =====");
+        for (String roomType : inventory.keySet()) {
+            System.out.println(roomType + ": " + inventory.get(roomType) + " rooms available");
+        }
+    }
+}
+
 public class Main {
 
     /**
@@ -52,27 +80,21 @@ public class Main {
      */
     public static void main(String[] args) {
 
-        Room single = new SingleRoom();
-        Room double1 = new DoubleRoom();
-        Room suite = new SuiteRoom();
+        RoomInventory inventory = new RoomInventory();
 
-        boolean singleAvailable = true;
-        boolean doubleAvailable = false;
-        boolean suiteAvailable = true;
+        System.out.println("===== Initial Inventory =====");
+        inventory.displayInventory();
 
-        System.out.println("===== Hotel Room Details =====");
+        System.out.println("\n===== Updating Suite Room to 4 =====");
+        inventory.updateAvailability("Suite Room", 4);
 
-        System.out.println("\n--- Single Room ---");
-        single.displayDetails();
-        System.out.println("Available: " + singleAvailable);
+        System.out.println("\n===== Updated Inventory =====");
+        inventory.displayInventory();
 
-        System.out.println("\n--- Double Room ---");
-        double1.displayDetails();
-        System.out.println("Available: " + doubleAvailable);
-
-        System.out.println("\n--- Suite Room ---");
-        suite.displayDetails();
-        System.out.println("Available: " + suiteAvailable);
+        System.out.println("\n===== Availability Check =====");
+        System.out.println("Single Room available: " + inventory.getAvailability("Single Room"));
+        System.out.println("Double Room available: " + inventory.getAvailability("Double Room"));
+        System.out.println("Suite Room available: " + inventory.getAvailability("Suite Room"));
 
     }
 }

@@ -1,95 +1,63 @@
 /**
  * BookMyStayApp - Hotel Booking Application
- * UC6: Room allocation with double-booking prevention.
+ * UC7: Optional add-on services for reservations.
  *
  * @author blazevineet
  * @version 1.0
  */
 
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.Set;
+import java.util.List;
+import java.util.Map;
 
-class Reservation {
-    String guestName;
-    String roomType;
-    int nights;
+class AddOnService {
+    String serviceName;
+    double cost;
 
-    Reservation(String guestName, String roomType, int nights) {
-        this.guestName = guestName;
-        this.roomType = roomType;
-        this.nights = nights;
+    AddOnService(String serviceName, double cost) {
+        this.serviceName = serviceName;
+        this.cost = cost;
+    }
+
+    void displayService() {
+        System.out.println("Service: " + serviceName + " | Cost: $" + cost);
     }
 }
 
-class RoomInventory {
-    private HashMap<String, Integer> inventory;
+class AddOnServiceManager {
+    private Map<String, List<AddOnService>> reservationServices;
 
-    RoomInventory() {
-        inventory = new HashMap<>();
-        inventory.put("Single Room", 3);
-        inventory.put("Double Room", 2);
-        inventory.put("Suite Room", 1);
+    AddOnServiceManager() {
+        reservationServices = new HashMap<>();
     }
 
-    int getAvailability(String roomType) {
-        return inventory.getOrDefault(roomType, 0);
+    void addService(String reservationId, AddOnService service) {
+        reservationServices.putIfAbsent(reservationId, new ArrayList<>());
+        reservationServices.get(reservationId).add(service);
+        System.out.println("Added [" + service.serviceName + "] to Reservation: " + reservationId);
     }
 
-    void decrement(String roomType) {
-        inventory.put(roomType, inventory.get(roomType) - 1);
-    }
-
-    void displayInventory() {
-        System.out.println("\n===== Current Inventory =====");
-        for (String roomType : inventory.keySet()) {
-            System.out.println(roomType + ": " + inventory.get(roomType) + " available");
+    double calculateTotalCost(String reservationId) {
+        double total = 0;
+        if (reservationServices.containsKey(reservationId)) {
+            for (AddOnService service : reservationServices.get(reservationId)) {
+                total += service.cost;
+            }
         }
-    }
-}
-
-class BookingService {
-    private RoomInventory inventory;
-    private HashMap<String, Set<String>> allocatedRooms;
-    private HashMap<String, Integer> roomCounter;
-
-    BookingService(RoomInventory inventory) {
-        this.inventory = inventory;
-        allocatedRooms = new HashMap<>();
-        roomCounter = new HashMap<>();
+        return total;
     }
 
-    void processRequest(Reservation reservation) {
-        String roomType = reservation.roomType;
-
-        if (inventory.getAvailability(roomType) <= 0) {
-            System.out.println("FAILED: No availability for " + roomType + " -> Guest: " + reservation.guestName);
+    void displayServices(String reservationId) {
+        System.out.println("\n===== Add-On Services for " + reservationId + " =====");
+        if (!reservationServices.containsKey(reservationId) || reservationServices.get(reservationId).isEmpty()) {
+            System.out.println("No services added.");
             return;
         }
-
-        roomCounter.put(roomType, roomCounter.getOrDefault(roomType, 0) + 1);
-        String roomId = roomType.replace(" ", "_").toUpperCase() + "_" + roomCounter.get(roomType);
-
-        allocatedRooms.putIfAbsent(roomType, new HashSet<>());
-
-        if (allocatedRooms.get(roomType).contains(roomId)) {
-            System.out.println("ERROR: Duplicate room ID detected -> " + roomId);
-            return;
+        for (AddOnService service : reservationServices.get(reservationId)) {
+            service.displayService();
         }
-
-        allocatedRooms.get(roomType).add(roomId);
-        inventory.decrement(roomType);
-
-        System.out.println("CONFIRMED: " + reservation.guestName + " -> " + roomType + " | Room ID: " + roomId + " | Nights: " + reservation.nights);
-    }
-
-    void displayAllocatedRooms() {
-        System.out.println("\n===== Allocated Rooms =====");
-        for (String roomType : allocatedRooms.keySet()) {
-            System.out.println(roomType + ": " + allocatedRooms.get(roomType));
-        }
+        System.out.println("Total Add-On Cost: $" + calculateTotalCost(reservationId));
     }
 }
 
@@ -100,24 +68,26 @@ public class Main {
      */
     public static void main(String[] args) {
 
-        RoomInventory inventory = new RoomInventory();
-        BookingService bookingService = new BookingService(inventory);
+        AddOnServiceManager manager = new AddOnServiceManager();
 
-        Queue<Reservation> queue = new LinkedList<>();
-        queue.add(new Reservation("Alice", "Single Room", 2));
-        queue.add(new Reservation("Bob", "Suite Room", 3));
-        queue.add(new Reservation("Charlie", "Double Room", 1));
-        queue.add(new Reservation("Diana", "Single Room", 4));
-        queue.add(new Reservation("Eve", "Suite Room", 2));
+        AddOnService breakfast = new AddOnService("Breakfast", 15.0);
+        AddOnService spa = new AddOnService("Spa Access", 50.0);
+        AddOnService airportPickup = new AddOnService("Airport Pickup", 30.0);
+        AddOnService laundry = new AddOnService("Laundry", 20.0);
 
-        System.out.println("===== Processing Booking Requests =====\n");
+        System.out.println("===== Guest Selecting Add-On Services =====\n");
 
-        while (!queue.isEmpty()) {
-            bookingService.processRequest(queue.poll());
-        }
+        manager.addService("RES_001", breakfast);
+        manager.addService("RES_001", spa);
+        manager.addService("RES_001", airportPickup);
 
-        bookingService.displayAllocatedRooms();
-        inventory.displayInventory();
+        manager.addService("RES_002", breakfast);
+        manager.addService("RES_002", laundry);
+
+        manager.displayServices("RES_001");
+        manager.displayServices("RES_002");
+
+        System.out.println("\nCore booking and inventory state unchanged.");
 
     }
 }
